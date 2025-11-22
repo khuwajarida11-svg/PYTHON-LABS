@@ -1,0 +1,53 @@
+import requests
+from bs4 import BeautifulSoup
+import argparse
+import re
+import csv
+
+# 1. Setup the Command Line Arguments
+# This allows us to pass a specific URL if we want, or use the default one
+parser = argparse.ArgumentParser(description="Scrape IPs from threat feed")
+parser.add_argument("url", nargs="?", help="URL to scrape", default="https://www.badips.com/badips/ssh")
+args = parser.parse_args()
+
+print(f"--- Target URL: {args.url} ---")
+
+# 2. Fake a User Agent
+# Some sites block scripts. This line makes our script look like a regular Windows PC browser.
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+
+try:
+    # 3. Get the Web Page
+    print("Fetching data...")
+    response = requests.get(args.url, headers=headers, timeout=10)
+    response.raise_for_status() # Check for errors (like 404 Not Found)
+
+    # 4. Parse the Content
+    soup = BeautifulSoup(response.text, 'html.parser')
+    text = soup.get_text()
+
+    # 5. Find IPs using Regex
+    # This pattern looks for: Number.Number.Number.Number
+    print("Scanning for IP addresses...")
+    ips = re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', text)
+    
+    # Remove duplicates using set()
+    unique_ips = list(set(ips))
+    print(f"Found {len(unique_ips)} unique IP addresses.")
+
+    # 6. Save to CSV
+    if unique_ips:
+        filename = 'malicious_ips.csv'
+        with open(filename, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Malicious IP']) # The Header
+            
+            for ip in unique_ips:
+                writer.writerow([ip])
+                
+        print(f"[SUCCESS] Saved results to '{filename}'")
+    else:
+        print("[!] No IPs found on this page.")
+
+except Exception as e:
+    print(f"[ERROR] An error occurred: {e}")
