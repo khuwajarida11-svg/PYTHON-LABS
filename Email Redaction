@@ -1,0 +1,33 @@
+import re
+
+def redact_emails(report_text):
+    """
+    Finds all email addresses and replaces them with a redacted placeholder.
+
+    We use a broad email pattern that doesn't need start/end anchors (\^, \$) 
+    since we are finding matches within a larger string.
+    """
+    # Pattern to match a standard email format
+    email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    
+    # Use re.sub() to replace all matches with the placeholder
+    redacted_text = re.sub(email_pattern, '[EMAIL_REDACTED]', report_text)
+    return redacted_text
+
+# --- Deliverable: Test Cases ---
+multi_line_report = (
+    "SECURITY REPORT: Oct 2025\n"
+    "Initial contact was made with user alice.smith@corp.com on 10/01.\n"
+    "A follow-up email was sent to bob.jones-support@hr-dept.net.\n"
+    "Please send all findings to security@audit.org.\n"
+    "False positive test: This is not an email."
+)
+
+redacted_output = redact_emails(multi_line_report)
+
+print("\n--- Email Redaction Results ---")
+print("Original Report (Before Redaction):\n" + "="*30)
+print(multi_line_report)
+
+print("\nRedacted Report (After Redaction):\n" + "="*30)
+print(redacted_output)
