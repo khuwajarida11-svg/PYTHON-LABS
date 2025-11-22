@@ -1,0 +1,40 @@
+import re
+
+def extract_valid_ipv4(log_data):
+    """
+    Extracts valid IPv4 addresses (where each octet is 0-255) from the log data.
+
+    Pattern (Octet Logic 0-255):
+    (25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)
+    - 25[0-5]: 250 to 255
+    - 2[0-4]\d: 200 to 249
+    - 1\d{2}: 100 to 199
+    - [1-9]\d: 10 to 99
+    - \d: 0 to 9
+
+    The full pattern repeats this octet logic 4 times, separated by literal dots (\.).
+    """
+    
+    # Combined pattern for a single valid octet (0-255)
+    octet = r'(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)'
+    
+    # Full IPv4 pattern combining the octet logic 4 times
+    ip_pattern = r'\b(?:' + octet + r'\.){3}' + octet + r'\b'
+    
+    # Use re.findall to get all matches
+    return re.findall(ip_pattern, log_data)
+
+# --- Deliverable: Test Cases ---
+log_with_ips = (
+    "Successful login from 192.168.1.100. "
+    "Suspicious activity from 256.1.2.3 (Invalid Octet). " # Invalid: 256
+    "Attempted access from 10.0.0.99 and 1.1.1.300 (Invalid Octet). " # Invalid: 300
+    "Internal server 127.0.0.1 is fine."
+)
+
+valid_ips = extract_valid_ipv4(log_with_ips)
+
+print("--- IP Validation and Extraction Results ---")
+print(f"Log Input: {log_with_ips}")
+print(f"\nValidation Logic: Complex set of alternatives chained to match [0-255] for each octet.")
+print(f"Extracted Valid IPs: {valid_ips}")
