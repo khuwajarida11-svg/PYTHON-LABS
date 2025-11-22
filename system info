@@ -1,0 +1,18 @@
+import subprocess
+import datetime # <-- NEW IMPORT
+# system_info.py
+
+try:
+    # 1. Generate Timestamp
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    result = subprocess.run(["ipconfig"], 
+                            capture_output=True, 
+                            text=True)
+
+    # 2. Print Timestamp before the network info
+    print(f"--- Log Entry: {timestamp} ---")
+    print("Network Info:\n" + result.stdout)
+
+except Exception as e:
+    print(f"Error: {e}")
