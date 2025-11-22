@@ -1,0 +1,84 @@
+import re
+
+# 1. Compile the patterns for efficiency (as required by the task)
+# Pattern for SQLi keywords (union, select, drop, etc.) followed by a context word (from, where, or, and)
+SQLI_PATTERN = re.compile(
+    r"(?i)(union|select|drop|insert|delete|update).*?(from|where|or|and)\b",
+    re.MULTILINE
+)
+
+# Pattern for XSS payloads (simple script tag or javascript: URI)
+XSS_PATTERN = re.compile(
+    r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>|javascript\s*:', 
+    re.IGNORECASE | re.MULTILINE
+)
+
+# Pattern for URL extraction (similar to the provided snippet, allowing http/https)
+# We make the domain name a capturing group ( ) for easy checking.
+URL_PATTERN = re.compile(
+    r'https?://([-\w.]+)(?:/[^\s]*)?', 
+    re.IGNORECASE
+)
+
+
+def scan_log_for_threats(log_content):
+    """Scans log content for SQLi, XSS, and suspicious URLs, then categorizes them."""
+    alerts = []
+    
+    # 1. Scan for SQLi threats
+    sqli_matches = SQLI_PATTERN.finditer(log_content)
+    for match in sqli_matches:
+        alerts.append({
+            'type': 'SQLi Alert',
+            'detail': match.group(0).strip()
+        })
+        
+    # 2. Scan for XSS threats
+    xss_matches = XSS_PATTERN.finditer(log_content)
+    for match in xss_matches:
+        alerts.append({
+            'type': 'XSS Alert',
+            'detail': match.group(0).strip()
+        })
+        
+    # 3. Scan for URLs and flag suspicious domains
+    url_matches = URL_PATTERN.finditer(log_content)
+    suspicious_domains = ['fake', 'evil', 'phish'] # List of suspicious keywords
+    
+    for match in url_matches:
+        full_url = match.group(0)
+        domain = match.group(1) # This is the first capturing group: the domain name
+        
+        url_type = 'URL Extracted'
+        if any(keyword in domain for keyword in suspicious_domains):
+            url_type = 'Suspicious URL Flag'
+        
+        alerts.append({
+            'type': url_type,
+            'detail': full_url
+        })
+
+    return alerts
+
+# --- Deliverable: Sample Logs with Injected Threats (Simulating access.log content) ---
+sample_log_content = """
+127.0.0.1 - - [15/Nov/2025:10:00:01 +0000] "GET /home HTTP/1.1" 200 1234
+192.168.1.1 - - [15/Nov/2025:10:00:05 +0000] "GET /search?query=admin' OR '1'='1 -- HTTP/1.1" 400 50 
+10.0.0.5 - - [15/Nov/2025:10:00:10 +0000] "GET /profile HTTP/1.1" 200 876
+192.168.1.5 - - [15/Nov/2025:10:00:15 +0000] "GET /data?p=<script>alert('XSS')</script> HTTP/1.1" 400 120
+203.0.113.1 - - [15/Nov/2025:10:00:20 +0000] "GET /image?src=javascript:evil_func() HTTP/1.1" 400 120
+172.16.0.1 - - [15/Nov/2025:10:00:25 +0000] "GET /download?file=malware.zip HTTP/1.1" 200 1024
+192.168.1.10 - - [15/Nov/2025:10:00:30 +0000] "GET /redirect?url=http://fakebank.com/login HTTP/1.1" 302 0
+192.168.1.11 - - [15/Nov/2025:10:00:35 +0000] "GET /check?url=https://www.google.com HTTP/1.1" 200 150
+192.168.1.12 - - [15/Nov/2025:10:00:40 +0000] "GET /check?url=http://evil-tracker.org/p.png HTTP/1.1" 200 150
+"""
+
+threat_alerts = scan_log_for_threats(sample_log_content)
+threat_count = len(threat_alerts)
+
+print("--- Threat Detection Pipeline Results ---")
+print(f"Total Threats Detected: {threat_count}\n")
+
+# Deliverable: Script output with alerts
+for i, alert in enumerate(threat_alerts, 1):
+    print(f"[{i:02d}] {alert['type']}: {alert['detail']}")
