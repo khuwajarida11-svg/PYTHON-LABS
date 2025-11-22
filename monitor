@@ -1,0 +1,57 @@
+import speedtest
+import datetime
+import csv
+import time
+import schedule
+
+# This function runs the test and logs the data
+def run_speed_test(log_file='speed_log.csv'):
+    print("Starting speed test... please wait.")
+    
+    try:
+        st = speedtest.Speedtest()
+        st.get_best_server()
+        
+        # Calculate speeds in Mbps (bits / 1,000,000)
+        download = st.download() / 1_000_000
+        upload = st.upload() / 1_000_000
+        
+        # Get other metrics
+        ping = st.results.ping
+        server = st.results.server['name']
+        
+        # Check for jitter and packet loss attributes
+        jitter = st.results.jitter if hasattr(st.results, 'jitter') else 'N/A'
+        packet_loss = st.results.packet_loss if hasattr(st.results, 'packet_loss') else 'N/A'
+        
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # Open the CSV file and append the new data
+        with open(log_file, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([timestamp, download, upload, ping, jitter, packet_loss, server])
+            
+        print(f"Test complete! Saved to {log_file}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Setup the CSV file headers if the file doesn't exist yet
+try:
+    with open('speed_log.csv', 'x', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Timestamp', 'Download (Mbps)', 'Upload (Mbps)', 'Ping (ms)', 'Jitter (ms)', 'Packet Loss (%)', 'Server'])
+except FileExistsError:
+    pass
+
+# --- AUTOMATION SECTION ---
+schedule.every(1).hours.do(run_speed_test)
+
+# Run one test immediately to verify it works
+run_speed_test()
+
+print("Monitoring started. Press Ctrl+C to stop.")
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
