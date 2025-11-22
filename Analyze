@@ -1,0 +1,33 @@
+import pandas as pd
+
+# You must install pandas first: pip install pandas
+try:
+    # 1. Load the data
+    df = pd.read_csv('speed_log.csv')
+
+    # 2. Calculate Averages
+    avg_download = df['Download (Mbps)'].mean()
+    avg_upload = df['Upload (Mbps)'].mean()
+    avg_ping = df['Ping (ms)'].mean()
+
+    # 3. Print the Report
+    print("----- NETWORK PERFORMANCE REPORT -----")
+    print(f"Total Tests Run: {len(df)}")
+    print(f"Average Download: {avg_download:.2f} Mbps")
+    print(f"Average Upload:   {avg_upload:.2f} Mbps")
+    print(f"Average Ping:     {avg_ping:.2f} ms")
+    print("--------------------------------------")
+
+    # 4. Check for Issues (Basic Logic)
+    # Using 50 Mbps as the example advertised speed from the previous run
+    advertised_download = 50.0 
+    
+    if avg_download < (advertised_download * 0.7):
+        print(f"WARNING: Average download speed is less than 70% of advertised ({advertised_download} Mbps).")
+    else:
+        print("Performance is within acceptable range.")
+
+except FileNotFoundError:
+    print("Error: speed_log.csv not found. Run monitor.py first.")
+except Exception as e:
+    print(f"An error occurred: {e}")
