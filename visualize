@@ -1,0 +1,35 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# You must install these first: pip install pandas matplotlib
+try:
+    # 1. Read the CSV file
+    df = pd.read_csv('speed_log.csv')
+    
+    # Convert the 'Timestamp' column to actual date/time objects
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+
+    # 2. Create the plot
+    plt.figure(figsize=(10, 6))
+    
+    # Plot Download and Upload speed
+    plt.plot(df['Timestamp'], df['Download (Mbps)'], marker='o', label='Download Speed')
+    plt.plot(df['Timestamp'], df['Upload (Mbps)'], marker='x', label='Upload Speed')
+    
+    # Add labels and title
+    plt.title('Internet Speed Monitoring')
+    plt.xlabel('Time')
+    plt.ylabel('Speed (Mbps)')
+    plt.xticks(rotation=45) 
+    plt.legend()
+    plt.grid(True)
+    
+    # 3. Save the graph
+    plt.tight_layout()
+    plt.savefig('speed_graph.png')
+    print("Success! Graph saved as 'speed_graph.png'.")
+
+except FileNotFoundError:
+    print("Error: speed_log.csv not found. Run monitor.py first!")
+except Exception as e:
+    print(f"An error occurred: {e}")
