@@ -1,0 +1,6 @@
+# hello.py
+print("Hello, Cybersecurity World!")
+
+ greet.py
+name = input("Enter your name: ")
+print(f"Hello, {name}!")
