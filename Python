@@ -1,0 +1,31 @@
+import re
+
+def extract_phones_international(text):
+    """
+    Extracts phone numbers, supporting local formats and international formats
+    starting with an optional '+' and country code.
+    
+    Pattern Breakdown (Simplified for Task Scope):
+    (?:...)? : Optional non-capturing group for the international prefix
+    \+ : Literal '+'
+    \d{1,3}[-.\s]? : 1-3 digits (country code) followed by an optional separator
+    \d{2,4} : First group of local digits (flexible to cover 2-4 digits, e.g., '20' or '123')
+    (?:[-.\s]?\d{2,4}){2,} : Non-capturing group for two or more additional groups 
+                           of 2-4 digits separated by optional [-.] or space.
+    \b : Word boundary to prevent matching incomplete numbers.
+    """
+    pattern = r'(?:\+\d{1,3}[-.\s]?)?\d{2,4}(?:[-.\s]?\d{2,4}){2,}\b'
+    return re.findall(pattern, text)
+
+# --- Deliverable: Test Cases ---
+text = (
+    "Contact: 123-456-7890 or +1-555-0123-4567 " 
+    "for US. For UK, call +44-20-1234-5678 or 020-555-1234. "
+    "Invalid number: 12345" # Should be ignored due to word boundary/structure
+)
+
+extracted_phones = extract_phones_international(text)
+
+print("\n--- Phone Extraction Results ---")
+print(f"Input Text: {text}")
+print(f"Extracted Phones: {extracted_phones}")
